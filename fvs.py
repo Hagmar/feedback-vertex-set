@@ -19,7 +19,7 @@ class Graph():
 			print("Warning: removing non-existing vertex")
 	
 	def add_edge(self, v_from, v_to):
-		if v_from in self.v and v_to in self.v:
+		if self.contains_vertex(v_from) and self.contains_vertex(v_to):
 			if v_from != v_to:
 				self.v[v_from].add(v_to)
 				self.v[v_to].add(v_from)
@@ -29,11 +29,17 @@ class Graph():
 			print("Warning: adding edge between non-existant vertices")
 	
 	def remove_edge(self, v_from, v_to):
-		if v_from in self.v and v_to in self.v:
-			if (v_to in self.v[v_from]) and (v_from in self.v[v_to]):
+		if self.contains_vertex(v_from) and self.contains_vertex(v_to):
+			if self.contains_edge(v_from, v_to):
 				self.v[v_from].remove(v_to)
 				self.v[v_to].remove(v_from)
 			else:
 				print("Warning: removing non-existant edge")
 		else:
 			print("Warning: removing edge from non-existant vertices")
+	
+	def contains_vertex(self, vertex):
+		return vertex in self.v
+
+	def contains_edge(self, v_from, v_to):
+		return (v_to in self.v[v_from]) and (v_from in self.v[v_to])
