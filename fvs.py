@@ -18,6 +18,14 @@ class Graph():
 		else:
 			print("Warning: removing non-existing vertex")
 	
+	def remove_vertex_neighbourhood(self, vertex):
+		if self.contains_vertex(vertex):
+			for v2 in self.v[vertex]:
+				self.remove_vertex(v2)
+			self.remove_vertex(vertex)
+		else:
+			print("Warning: removing neighbourhood of non-existant vertex")
+
 	def add_edge(self, v_from, v_to):
 		if self.contains_vertex(v_from) and self.contains_vertex(v_to):
 			if v_from != v_to:
