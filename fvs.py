@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 class Graph():
 	def __init__(self):
@@ -54,3 +54,10 @@ class Graph():
 
 	def contains_edge(self, v_from, v_to):
 		return (v_to in self.v[v_from]) and (v_from in self.v[v_to])
+
+
+def fvs_compression(g: Graph, k: int) -> bool:
+	return True
+
+def fvs_branch(g: Graph, k: int) -> bool:
+	return True
