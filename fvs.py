@@ -9,14 +9,14 @@ class Graph():
 
 	def add_vertex(self, vertex):
 		if not self.contains_vertex(vertex):
-			self.v[vertex] = set()
+			self.v[vertex] = dict()
 		else:
 			print("Warning: adding already existing vertex")
 
 	def remove_vertex(self, vertex):
 		if self.contains_vertex(vertex):
 			for v2 in self.v[vertex]:
-				self.v[v2].remove(vertex)
+				self.v[v2].pop(vertex)
 			del self.v[vertex]
 		else:
 			print("Warning: removing non-existing vertex")
@@ -24,26 +24,33 @@ class Graph():
 	def remove_vertex_neighbourhood(self, vertex):
 		if self.contains_vertex(vertex):
 			for v2 in self.v[vertex]:
+				self.v[v2].pop(vertex)
 				self.remove_vertex(v2)
-			self.remove_vertex(vertex)
+			del self.v[vertex]
 		else:
 			print("Warning: removing neighbourhood of non-existant vertex")
 
 	def add_edge(self, v_from, v_to):
 		if self.contains_vertex(v_from) and self.contains_vertex(v_to):
+			if not self.contains_edge(v_from, v_to):
+				self.v[v_from][v_to] = 0
+				self.v[v_to][v_from] = 0
+			self.v[v_from][v_to] += 1
 			if v_from != v_to:
-				self.v[v_from].add(v_to)
-				self.v[v_to].add(v_from)
-			else:
-				print("Warning: adding edge from vertex to self")
+				self.v[v_to][v_from] += 1
 		else:
 			print("Warning: adding edge between non-existant vertices")
 
 	def remove_edge(self, v_from, v_to):
 		if self.contains_vertex(v_from) and self.contains_vertex(v_to):
 			if self.contains_edge(v_from, v_to):
-				self.v[v_from].remove(v_to)
-				self.v[v_to].remove(v_from)
+				self.v[v_from][v_to] -= 1
+				if v_from != v_to:
+					self.v[v_to][v_from] -= 1
+				if self.v[v_from][v_to] == 0:
+					self.v[v_from].pop(v_to)
+					if v_from != v_to:
+						self.v[v_to].pop(v_from)
 			else:
 				print("Warning: removing non-existant edge")
 		else:
