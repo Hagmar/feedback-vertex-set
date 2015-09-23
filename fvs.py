@@ -5,13 +5,13 @@ class Graph():
 		self.v = {}
 
 	def add_vertex(self, vertex):
-		if not vertex in self.v:
+		if not self.contains_vertex(vertex):
 			self.v[vertex] = set()
 		else:
 			print("Warning: adding already existing vertex")
-	
+
 	def remove_vertex(self, vertex):
-		if vertex in self.v:
+		if self.contains_vertex(vertex):
 			for v2 in self.v[vertex]:
 				self.v[v2].remove(vertex)
 			del self.v[vertex]
