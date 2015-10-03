@@ -147,14 +147,15 @@ def fvs_via_compression(g: MultiGraph, k: int) -> set:
 	# The set of nodes currently under consideration.
 	node_set = set(nodes[:(k + 2)])
 
-	# The current best solution, of size (k + 1) at the start of each iteration, and size k at the end.
+	# The current best solution, of size <= (k + 1) at the start of each iteration,
+	# and size <= k at the end.
 	soln = set(nodes[:k])
 
 	for i in range(k + 2, len(nodes)):
 		soln.add(nodes[i])
 		node_set.add(nodes[i])
 
-		assert (len(soln) == (k + 1))
+		assert (len(soln) <= (k + 1))
 		assert (len(node_set) == (i + 1))
 
 		new_soln = fvs_compression(g.subgraph(node_set).copy(), soln, k)
@@ -163,6 +164,6 @@ def fvs_via_compression(g: MultiGraph, k: int) -> set:
 			return None
 
 		soln = new_soln
-		assert (len(soln) == k)
+		assert (len(soln) <= k)
 
 	return soln
