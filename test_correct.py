@@ -1,4 +1,5 @@
 from fvs import *
+from generate import generate
 
 def test_cycle_graphs():
 	for i in range(3, 20):
@@ -31,3 +32,11 @@ def test_simple1():
 	fvs = fvs_via_compression(g, 2)
 	assert fvs != None
 	assert is_fvs(g, fvs)
+
+def test_generated():
+	for i in range(1, 10):
+		for _ in range(1, 10):
+			g = generate(i)
+			fvs = fvs_via_compression(g, i)
+			assert fvs != None
+			assert is_fvs(g, fvs)
