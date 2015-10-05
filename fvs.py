@@ -6,6 +6,7 @@ import nx.algorithms.cycles as cyc
 
 from networkx import MultiGraph
 from networkx.algorithms.tree import is_forest
+from collections import defaultdict
 
 def graph_minus(g: MultiGraph, w: set) -> MultiGraph:
 	gx = g.copy()
@@ -171,7 +172,37 @@ def fvs_via_compression(g: MultiGraph, k: int) -> set:
 
 	return soln
 
-def generalized_degree(g: MultiGraph, node) -> int:
+def compress(g: MultiGraph, t: set) -> MultiGraph:
+	gx = g.copy()
+	if not t:
+		return gx
+
+	compressed_node = t.pop()
+	compressed_edges = defaultdict(int)
+
+	for node in t:
+		for edge in gx.edges(node):
+			if edge[0] == node:
+				node_2 = edge[1]
+			else:
+				node_2 = edge[0]
+			if not node_2 not in t:
+				gx.add_edge(compressed_node, edge_2)
+		gx.remove_node(node)
+
+	remove = set()
+	for node in gx.adj[compressed_node]:
+		if len(gx.adj[compressed_node][n]) >= 2:
+			# Using a set to remove to avoid messing up iteration of adj
+			remove.add(node)
+
+	for node in remove:
+		gx.remove_node(node)
+
+	return gx
+
+# TODO
+def generalized_degree(g: MultiGraph, node) -> (int, set):
 	assert g.has_node(node), "Calculating gd for node which is not in g!"
 
 def mif_main(g: MultiGraph, f: set) -> int:
@@ -224,9 +255,8 @@ def mif_main(g: MultiGraph, f: set) -> int:
 		except:
 			gx_mif = mif_main(gx, fx2)
 		return max(mif_main(g, fx1), gx_mif)
-	else:
-		print("Error - this shouldn't be possible")
-		sys.exit(1)
+	print("Error - this shouldn't be possible")
+	return 0
 
 def fvs_via_mif(g: MultiGraph, f: set) -> int:
 	if nxc.number_connected_components(g) >= 2:
