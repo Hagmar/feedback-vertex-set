@@ -1,12 +1,10 @@
 import itertools
-import sys
 import networkx as nx
-import nx.algorithms.components.connected as nxc
-import nx.algorithms.cycles as cyc
+import networkx.algorithms.components.connected as nxc
+import networkx.algorithms.cycles as cyc
 
 from networkx import MultiGraph
 from networkx.algorithms.tree import is_forest
-from collections import defaultdict
 
 def graph_minus(g: MultiGraph, w: set) -> MultiGraph:
 	gx = g.copy()
@@ -178,7 +176,6 @@ def compress(g: MultiGraph, t: set) -> MultiGraph:
 		return gx
 
 	compressed_node = t.pop()
-	compressed_edges = defaultdict(int)
 
 	for node in t:
 		for edge in gx.edges(node):
@@ -186,13 +183,13 @@ def compress(g: MultiGraph, t: set) -> MultiGraph:
 				node_2 = edge[1]
 			else:
 				node_2 = edge[0]
-			if not node_2 not in t:
-				gx.add_edge(compressed_node, edge_2)
+			if not (node_2 in t or node_2 == compressed_node):
+				gx.add_edge(compressed_node, node_2)
 		gx.remove_node(node)
 
 	remove = set()
 	for node in gx.adj[compressed_node]:
-		if len(gx.adj[compressed_node][n]) >= 2:
+		if len(gx.adj[compressed_node][node]) >= 2:
 			# Using a set to remove to avoid messing up iteration of adj
 			remove.add(node)
 
