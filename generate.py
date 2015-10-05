@@ -25,7 +25,7 @@ def generate(k: int) -> MultiGraph:
 
 	# Create all the graphs.
 	line_graphs = [nx.path_graph(randint(1, k)) for _ in range(num_lines)]
-	cycle_graphs = [nx.cycle_graph(randint(1, k)) for _ in range(num_cycles)]
+	cycle_graphs = [nx.cycle_graph(randint(3, k + 3)) for _ in range(num_cycles)]
 	complete_graphs = [nx.complete_graph(kx + 2) for kx in complete_graph_fvs_sizes]
 
 	# Shuffle a list of connected components.

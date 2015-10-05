@@ -40,3 +40,4 @@ def test_generated():
 			fvs = fvs_via_compression(g, i)
 			assert fvs != None
 			assert is_fvs(g, fvs)
+			assert len(fvs) == i
