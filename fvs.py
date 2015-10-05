@@ -189,11 +189,34 @@ def mif_main(g: MultiGraph, f: set) -> int:
 	# Set t as active vertex
 	t = g.nodes[0]
 
+	gd_over_3 = None
+	gd_2 = None
 	for v in g.neighbors_iter(t):
-		if generalized_degree(v) <= 1:
+		(gd_v, gn_v) = generalized_degree(v)
+		if gd_v <= 1:
 			f.add(v)
 			return mif_main(g, f)
-	
+		elif gd_v >=3:
+			gd_over_3 = v
+		else:
+			gd_2 = (v, gn_v)
+	if gd_over_3 != None:
+		# Cannot simply use "if gd_over_3" because v might be 0
+		fx = f.copy()
+		fx.add(gd_over_3)
+		gx = g.copy()
+		gx.remove_node(gd_over_3)
+		return max(mif_main(g, fx), mif_main(gx, f))
+	elif gd_2 != None:
+		(v, gn) = gd_2
+		fx1 = f.copy()
+		fx2 = f.copy()
+		fx1.add(v)
+		for n in gn:
+			fx2.add(n)
+		gx = g.copy()
+		gx.remove(v)
+
 
 def fvs_via_mif(g: MultiGraph, f: set) -> int:
 	if nxc.number_connected_components(g) >= 2:
