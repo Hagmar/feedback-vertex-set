@@ -169,6 +169,9 @@ def fvs_via_compression(g: MultiGraph, k: int) -> set:
 
 	return soln
 
+def generalized_degree(g: MultiGraph, node) -> int:
+	assert g.has_node(node), "Calculating gd for node which is not in g!"
+
 def mif_main(g: MultiGraph, f: set) -> int:
 	if f == g.nodes():
 		return len(g)
@@ -183,6 +186,13 @@ def mif_main(g: MultiGraph, f: set) -> int:
 			gx = g.copy()
 			gx.remove_node(g_max_degree_node)
 			return max(mif_main(g, fx), mif_main(gx, f))
+	# Set t as active vertex
+	t = g.nodes[0]
+
+	for v in g.neighbors_iter(t):
+		if generalized_degree(v) <= 1:
+			f.add(v)
+			return mif_main(g, f)
 	
 
 def fvs_via_mif(g: MultiGraph, f: set) -> int:
