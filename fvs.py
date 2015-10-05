@@ -1,5 +1,6 @@
 import itertools
 import networkx as nx
+import nx.algorithms.components.connected as nxc
 
 from networkx import MultiGraph
 from networkx.algorithms.tree import is_forest
@@ -167,3 +168,27 @@ def fvs_via_compression(g: MultiGraph, k: int) -> set:
 		assert (len(soln) <= k)
 
 	return soln
+
+def mif_main(g: MultiGraph, f: set) -> int:
+	if f == g.nodes():
+		return len(g)
+	if (not f):
+		g_degree = g.degree()
+		g_max_degree_node = max(g_degree, key=lambda n: g_degree[n])
+		if (g_degree[g_max_degree_node] <= 1):
+			return len(g)
+		else:
+			fx = f.copy()
+			fx.add(t)
+			gx = g.copy()
+			gx.remove_node(t)
+			return max(mif_main(g, fx), mif_main(gx, f))
+
+def fvs_via_mif(g: MultiGraph, f: set) -> int:
+	if nxc.number_connected_components(g) >= 2:
+		fvs_size = 0
+		for component in nxc.connected_components(g):
+			nodes = component.nodes()
+			f_i = nodes.intersection(f)
+			fvs_size += fvs_via_mif(component, f_i)
+
