@@ -179,10 +179,11 @@ def mif_main(g: MultiGraph, f: set) -> int:
 			return len(g)
 		else:
 			fx = f.copy()
-			fx.add(t)
+			fx.add(g_max_degree_node)
 			gx = g.copy()
-			gx.remove_node(t)
+			gx.remove_node(g_max_degree_node)
 			return max(mif_main(g, fx), mif_main(gx, f))
+	
 
 def fvs_via_mif(g: MultiGraph, f: set) -> int:
 	if nxc.number_connected_components(g) >= 2:
