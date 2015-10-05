@@ -1,6 +1,8 @@
 import itertools
+import sys
 import networkx as nx
 import nx.algorithms.components.connected as nxc
+import nx.algorithms.cycles as cyc
 
 from networkx import MultiGraph
 from networkx.algorithms.tree import is_forest
@@ -216,7 +218,15 @@ def mif_main(g: MultiGraph, f: set) -> int:
 			fx2.add(n)
 		gx = g.copy()
 		gx.remove(v)
-
+		try:
+			cyc.find_cycle(gx.subgraph(fx2))
+			gx_mif = 0
+		except:
+			gx_mif = mif_main(gx, fx2)
+		return max(mif_main(g, fx1), gx_mif)
+	else:
+		print("Error - this shouldn't be possible")
+		sys.exit(1)
 
 def fvs_via_mif(g: MultiGraph, f: set) -> int:
 	if nxc.number_connected_components(g) >= 2:
