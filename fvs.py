@@ -240,7 +240,7 @@ def mif_main(g: MultiGraph, f: set) -> int:
 	t = g.nodes[0]
 
 	gd_over_3 = None
-	gd_2 = Nonet = g.nodes[0]t = g.nodes[0]
+	gd_2 = None
 	for v in g.neighbors_iter(t):
 		(gd_v, gn_v) = generalized_degree(g, f, t, v)
 		if gd_v <= 1:
@@ -301,11 +301,7 @@ def mif_preprocess_1(g: MultiGraph, f: set) -> int:
 		return mif_size
 	return mif_preprocess_2(g, f)
 
-def fvs_via_mif(g: MultiGraph, f: set) -> int:
-	if nxc.number_connected_components(g) >= 2:
-		fvs_size = 0
-		for component in nxc.connected_components(g):
-			nodes = component.nodes()
-			f_i = nodes.intersection(f)
-			fvs_size += fvs_via_mif(component, f_i)
-
+def fvs_via_mif(g: MultiGraph) -> int:
+	mif = mif_preprocess_1(g, set())
+	print("Size of maximum independent forest: ", mif)
+	return mif
