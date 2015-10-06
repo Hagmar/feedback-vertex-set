@@ -170,12 +170,14 @@ def fvs_via_compression(g: MultiGraph, k: int) -> set:
 
 	return soln
 
-def compress(g: MultiGraph, t: set) -> MultiGraph:
+def compress(g: MultiGraph, t: set, compressed_node) -> MultiGraph:
 	gx = g.copy()
 	if not t:
 		return gx
 
-	compressed_node = t.pop()
+	if compressed_node in t:
+		t.remove(compressed_node)
+	gx.add_node(compressed_node)
 
 	for node in t:
 		for edge in gx.edges(node):
@@ -199,8 +201,19 @@ def compress(g: MultiGraph, t: set) -> MultiGraph:
 	return gx
 
 # TODO
-def generalized_degree(g: MultiGraph, node) -> (int, set):
+def generalized_degree(g: MultiGraph, f: set, active_node, node) -> (int, set):
 	assert g.has_node(node), "Calculating gd for node which is not in g!"
+
+	k = set(g.neighbors(node))
+	k.remove(active_node)
+	k.intersection(f)
+
+	gx = compress(g, k, node)
+
+	neighbors = gx.neighbors(node)
+	neighbors.remove(active_node)
+
+	return (len(neighbors), neighbors)
 
 def mif_main(g: MultiGraph, f: set) -> int:
 	if f == g.nodes():
@@ -221,8 +234,9 @@ def mif_main(g: MultiGraph, f: set) -> int:
 
 	gd_over_3 = None
 	gd_2 = None
+	# TODO make sure whether N(t) includes t or not
 	for v in g.neighbors_iter(t):
-		(gd_v, gn_v) = generalized_degree(v)
+		(gd_v, gn_v) = generalized_degree(g, f, t, v)
 		if gd_v <= 1:
 			f.add(v)
 			return mif_main(g, f)
