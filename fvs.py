@@ -182,11 +182,13 @@ def compress(g: MultiGraph, t: set, compressed_node) -> MultiGraph:
 	if not t:
 		return gx
 
-	if compressed_node in t:
-		t.remove(compressed_node)
+	tx = t
+	if compressed_node in tx:
+		tx = t.copy()
+		tx.remove(compressed_node)
 	gx.add_node(compressed_node)
 
-	for node in t:
+	for node in tx:
 		for edge in gx.edges(node):
 			if edge[0] == node:
 				node_2 = edge[1]
@@ -222,9 +224,11 @@ def generalized_degree(g: MultiGraph, f: set, active_node, node) -> (int, set):
 	return (len(neighbors), neighbors)
 
 def mif_main(g: MultiGraph, f: set, t, k: int) -> set:
-	if k > g.order():
+	k_set = k != None
+	new_k1 = new_k2 = None
+	if k_set and k > g.order():
 		return None
-	if f == g.nodes() or k <= 0:
+	if f == g.nodes() or (k_set and k <= 0):
 		return f
 	if (not f):
 		g_degree = g.degree()
@@ -236,16 +240,21 @@ def mif_main(g: MultiGraph, f: set, t, k: int) -> set:
 			fx.add(g_max_degree_node)
 			gx = g.copy()
 			gx.remove_node(g_max_degree_node)
-			mif_set1 = mif_preprocess_1(g, fx, t, k-1)
-			if mif_set1:
-				return mif_set1
-			mif_set2 = mif_preprocess_1(gx, f, t, k)
-			if mif_set2:
+			if k_set:
+				new_k1 = k-1
+				new_k2 = k
+			mif_set1 = mif_preprocess_1(g, fx, t, new_k1)
+			mif_set2 = mif_preprocess_1(gx, f, t, new_k2)
+			if not mif_set1:
 				return mif_set2
-			return None
+			elif not mif_set2:
+				return mif_set1
+			else:
+				a= max(mif_set1, mif_set2, key=len)
+				return a
 
 	# Set t as active vertex
-	if t == None:
+	if t == None or not t in f:
 		t = next(iter(f))
 
 	gd_over_3 = None
@@ -254,7 +263,9 @@ def mif_main(g: MultiGraph, f: set, t, k: int) -> set:
 		(gd_v, gn_v) = generalized_degree(g, f, t, v)
 		if gd_v <= 1:
 			f.add(v)
-			return mif_preprocess_1(g, f, t, k-1)
+			if k_set:
+				new_k1 = k-1
+			return mif_preprocess_1(g, f, t, new_k1)
 		elif gd_v >= 3:
 			gd_over_3 = v
 		else:
@@ -265,13 +276,17 @@ def mif_main(g: MultiGraph, f: set, t, k: int) -> set:
 		fx.add(gd_over_3)
 		gx = g.copy()
 		gx.remove_node(gd_over_3)
-		mif_set1 = mif_preprocess_1(g, fx, t, k-1)
-		if mif_set1:
-			return mif_set1
-		mif_set2 = mif_preprocess_1(gx, f, t, k)
-		if mif_set2:
+		if k_set:
+			new_k1 = k-1
+			new_k2 = k
+		mif_set1 = mif_preprocess_1(g, fx, t, new_k1)
+		mif_set2 = mif_preprocess_1(gx, f, t, new_k2)
+		if not mif_set1:
 			return mif_set2
-		return None
+		elif not mif_set2:
+			return mif_set1
+		else:
+			return max(mif_set1, mif_set2, key=len)
 	elif gd_2 != None:
 		(v, gn) = gd_2
 		fx1 = f.copy()
@@ -281,16 +296,21 @@ def mif_main(g: MultiGraph, f: set, t, k: int) -> set:
 			fx2.add(n)
 		gx = g.copy()
 		gx.remove_node(v)
+		if k_set:
+			new_k1 = k-2
+			new_k2 = k-1
 		try:
 			cyc.find_cycle(gx.subgraph(fx2))
+			mif_set1 = None
 		except:
-			mif_set1 = mif_preprocess_1(gx, fx2, t, k-2)
-			if mif_set1:
-				return mif_set1
-		mif_set2 = mif_preprocess_1(g, fx1, t, k-1)
-		if mif_set2:
+			mif_set1 = mif_preprocess_1(gx, fx2, t, new_k1)
+		mif_set2 = mif_preprocess_1(g, fx1, t, new_k2)
+		if not mif_set1:
 			return mif_set2
-		return None
+		elif not mif_set2:
+			return mif_set1
+		else:
+			return max(mif_set1, mif_set2, key=len)
 	return None
 
 def mif_preprocess_2(g: MultiGraph, f: set, active_v, k: int) -> set:
@@ -313,7 +333,9 @@ def mif_preprocess_2(g: MultiGraph, f: set, active_v, k: int) -> set:
 				break
 	mif_set2 = mif_main(g, f, active_v, k)
 	if mif_set2:
-		return mif_set2.union(mif_set)
+		mif_set = mif_set2.union(mif_set)
+	if k == None or len(mif_set) >= k:
+		return mif_set
 	return None
 
 def mif_preprocess_1(g: MultiGraph, f: set, active_v, k: int) -> set:
@@ -322,15 +344,19 @@ def mif_preprocess_1(g: MultiGraph, f: set, active_v, k: int) -> set:
 		for component in nxc.connected_components(g):
 			f_i = component.intersection(f)
 			gx = g.subgraph(component)
-			component_mif_set = mif_preprocess_2(gx, f_i, active_v, k)
-			mif_set = mif_set.union(component_mif_set)
-			k -= len(component_mif_set)
-			if k <= 0:
-				return mif_set
+			component_mif_set = mif_preprocess_2(gx, f_i, active_v, None)
+			if component_mif_set:
+				mif_set = mif_set.union(component_mif_set)
+				if k != None:
+					k -= (len(component_mif_set) - len(f_i))
+					if k <= 0:
+						return mif_set
+		if k == None or len(mif_set) >= k:
+			return mif_set
 		return None
 	return mif_preprocess_2(g, f, active_v, k)
 
-def mif(g: MultiGraph, k: int) -> set:
+def mif(g: MultiGraph, k=None) -> set:
 	return mif_preprocess_1(g, set(), None, k)
 
 def fvs_via_mif(g: MultiGraph, k: int) -> set:
