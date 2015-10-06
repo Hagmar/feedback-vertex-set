@@ -235,7 +235,6 @@ def mif_main(g: MultiGraph, f: set) -> int:
 
 	gd_over_3 = None
 	gd_2 = None
-	# TODO make sure whether N(t) includes t or not
 	for v in g.neighbors_iter(t):
 		(gd_v, gn_v) = generalized_degree(g, f, t, v)
 		if gd_v <= 1:
@@ -269,6 +268,19 @@ def mif_main(g: MultiGraph, f: set) -> int:
 		return max(mif_main(g, fx1), gx_mif)
 	print("Error - this shouldn't be possible")
 	return 0
+
+def mif_preprocess_2(g: MultiGraph, f: set) -> int:
+	if 
+
+def mif_preprocess_1(g: MultiGraph, f: set) -> int:
+	if nxc.number_connected_components(g) >= 2:
+		mif_size = 0
+		for component in nxc.connected_components(g):
+			nodes = component.nodes()
+			f_i = nodes.intersection(f)
+			mif_size += mif_preprocess_2(component, f_i)
+		return mif_size
+	return mif_preprocess_2(g, f)
 
 def fvs_via_mif(g: MultiGraph, f: set) -> int:
 	if nxc.number_connected_components(g) >= 2:
