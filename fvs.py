@@ -17,7 +17,7 @@ def is_fvs(g: MultiGraph, w) -> bool:
 
 def is_independent_set(g: MultiGraph, f: set) -> bool:
 	for edge in itertools.combinations(f, 2):
-		if g.has_edge(edge):
+		if g.has_edge(edge[0], edge[1]):
 			return False
 	return True
 
@@ -207,7 +207,7 @@ def compress(g: MultiGraph, t: set, compressed_node) -> MultiGraph:
 
 	return gx
 
-def generalized_degree(g: MultiGraph, f: set, active_node, node) -> (MultiGraph, int, set):
+def generalized_degree(g: MultiGraph, f: set, active_node, node) -> (int, set):
 	assert g.has_node(node), "Calculating gd for node which is not in g!"
 
 	k = set(g.neighbors(node))
@@ -219,52 +219,42 @@ def generalized_degree(g: MultiGraph, f: set, active_node, node) -> (MultiGraph,
 	neighbors = gx.neighbors(node)
 	neighbors.remove(active_node)
 
-	return (gx, len(neighbors), neighbors)
+	return (len(neighbors), neighbors)
 
-def mif_main(g: MultiGraph, f: set, k: int) -> set:
-	print("k is", k, "f is", f)
+def mif_main(g: MultiGraph, f: set, t, k: int) -> set:
 	if k > g.order():
 		return None
 	if f == g.nodes() or k <= 0:
-		print("F contains all nodes")
 		return f
 	if (not f):
-		print("Not f")
 		g_degree = g.degree()
 		g_max_degree_node = max(g_degree, key=lambda n: g_degree[n])
-		print("Max-degree node:", g_max_degree_node)
 		if (g_degree[g_max_degree_node] <= 1):
-			print("Max degree is <= 1")
 			return set(g.nodes())
 		else:
 			fx = f.copy()
 			fx.add(g_max_degree_node)
 			gx = g.copy()
 			gx.remove_node(g_max_degree_node)
-			mif_set1 = mif_main(g, fx, k-1)
+			mif_set1 = mif_preprocess_1(g, fx, t, k-1)
 			if mif_set1:
-				print(g_max_degree_node, "in F")
 				return mif_set1
-			mif_set2 = mif_main(gx, f, k)
+			mif_set2 = mif_preprocess_1(gx, f, t, k)
 			if mif_set2:
-				print(g_max_degree_node, "not in F")
 				return mif_set2
 			return None
 
 	# Set t as active vertex
-	t = next(iter(f))
-	print("Active node =", t)
+	if t == None:
+		t = next(iter(f))
 
 	gd_over_3 = None
 	gd_2 = None
 	for v in g.neighbors_iter(t):
-		(gx, gd_v, gn_v) = generalized_degree(g, f, t, v)
+		(gd_v, gn_v) = generalized_degree(g, f, t, v)
 		if gd_v <= 1:
-			print("GD is 1")
-			print(f)
 			f.add(v)
-			print(f)
-			return mif_main(gx, f, k-1)
+			return mif_preprocess_1(g, f, t, k-1)
 		elif gd_v >= 3:
 			gd_over_3 = v
 		else:
@@ -275,10 +265,10 @@ def mif_main(g: MultiGraph, f: set, k: int) -> set:
 		fx.add(gd_over_3)
 		gx = g.copy()
 		gx.remove_node(gd_over_3)
-		mif_set1 = mif_main(g, fx, k-1)
+		mif_set1 = mif_preprocess_1(g, fx, t, k-1)
 		if mif_set1:
 			return mif_set1
-		mif_set2 = mif_main(gx, f, k)
+		mif_set2 = mif_preprocess_1(gx, f, t, k)
 		if mif_set2:
 			return mif_set2
 		return None
@@ -290,63 +280,61 @@ def mif_main(g: MultiGraph, f: set, k: int) -> set:
 		for n in gn:
 			fx2.add(n)
 		gx = g.copy()
-		gx.remove(v)
+		gx.remove_node(v)
 		try:
 			cyc.find_cycle(gx.subgraph(fx2))
 		except:
-			mif_set1 = mif_main(gx, fx2, k-2)
+			mif_set1 = mif_preprocess_1(gx, fx2, t, k-2)
 			if mif_set1:
 				return mif_set1
-		mif_set2 = mif_main(g, fx1, k-1)
+		mif_set2 = mif_preprocess_1(g, fx1, t, k-1)
 		if mif_set2:
 			return mif_set2
 		return None
-	print("Error - This shouldn't be possible")
 	return None
 
-def mif_preprocess_2(g: MultiGraph, f: set, k: int) -> set:
+def mif_preprocess_2(g: MultiGraph, f: set, active_v, k: int) -> set:
 	mif_set = set()
 	while not is_independent_set(g, f):
-		for component in nxc.connected_components(g):
+		mif_set = mif_set.union(f)
+		for component in nxc.connected_components(g.subgraph(f)):
 			if len(component) > 1:
-				compressed_node = component.pop()
+				if active_v in component:
+					active_v = component.pop()
+					compressed_node = active_v
+				else:
+					compressed_node = component.pop()
 				g = compress(g, component, compressed_node)
-				f = f.intersect(g.nodes())
+				f = f.intersection(g.nodes())
 				# Maybe faster with
 				# f = f.difference(component)
 				# f.add(compressed_node)
 				mif_set = mif_set.union(component)
-				k -= len(component)
-				if k <= 0:
-					return mif_set
 				break
-		print("Error - This shouldn't be possible")
-	mif_set2 = mif_main(g, f, k)
+	mif_set2 = mif_main(g, f, active_v, k)
 	if mif_set2:
 		return mif_set2.union(mif_set)
 	return None
 
-def mif_preprocess_1(g: MultiGraph, f: set, k: int) -> set:
+def mif_preprocess_1(g: MultiGraph, f: set, active_v, k: int) -> set:
 	if nxc.number_connected_components(g) >= 2:
 		mif_set = set()
 		for component in nxc.connected_components(g):
 			f_i = component.intersection(f)
 			gx = g.subgraph(component)
-			component_mif_set = mif_preprocess_2(gx, f_i, k)
+			component_mif_set = mif_preprocess_2(gx, f_i, active_v, k)
 			mif_set = mif_set.union(component_mif_set)
 			k -= len(component_mif_set)
 			if k <= 0:
 				return mif_set
 		return None
-	return mif_preprocess_2(g, f, k)
+	return mif_preprocess_2(g, f, active_v, k)
 
 def mif(g: MultiGraph, k: int) -> set:
-	print("Finding mif of at least size", k)
-	return mif_preprocess_1(g, set(), k)
+	return mif_preprocess_1(g, set(), None, k)
 
 def fvs_via_mif(g: MultiGraph, k: int) -> set:
 	mif_set = mif(g, g.order()-k)
-	print("Mif set:", mif_set)
 	if mif_set:
 		nodes = set(g.nodes())
 		mif_set = nodes.difference(mif_set)
