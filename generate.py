@@ -1,4 +1,5 @@
 import random
+import pickle
 
 from fvs import *
 from random import randint
@@ -51,3 +52,14 @@ def generate(k: int) -> MultiGraph:
 		offset += len(c)
 
 	return g
+
+K_MIN = 2
+K_MAX = 8
+GRAPHS_PER_K = 20
+OUTPUT_FILE = "graphs.pickle"
+
+# Generate a bunch of graphs and write them to disk.
+def generate_lots():
+	instances = [(generate(k), k) for k in range(K_MIN, K_MAX) for _ in range(GRAPHS_PER_K)]
+	with open(OUTPUT_FILE, "wb") as f:
+		pickle.dump(instances, f)

@@ -6,13 +6,13 @@ from fvs import *
 from generate import *
 
 # Solve the given instance and return the time required to do so.
-def time_instance(gk: (MultiGraph, int), algorithm=fvs_via_compression, n=10) -> float:
+def time_instance(gk: (MultiGraph, int), algorithm=fvs_via_compression, n=10) -> (set, float):
 	g, k = gk
 	start = time.process_time()
 	for _ in range(0, n):
-		algorithm(g, k)
+		fvs = algorithm(g, k)
 	end = time.process_time()
-	return (end - start) / n
+	return (fvs, (end - start) / n)
 
 # Example benchmark.
 if __name__ == "__main__":
