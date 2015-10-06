@@ -207,7 +207,7 @@ def generalized_degree(g: MultiGraph, f: set, active_node, node) -> (int, set):
 
 	k = set(g.neighbors(node))
 	k.remove(active_node)
-	k.intersection(f)
+	k = k.intersection(f)
 
 	gx = compress(g, k, node)
 
