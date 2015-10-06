@@ -15,6 +15,12 @@ def is_fvs(g: MultiGraph, w) -> bool:
 	h = graph_minus(g, w)
 	return ((len(h) == 0) or is_forest(h))
 
+def is_independent_set(g: MultiGraph, f: set) -> bool:
+	for edge in itertools.combinations(f, 2):
+		if g.has_edge(edge):
+			return False
+	return True
+
 # Note: All reduction functions return (G, W, k) followed by any element added to the solution
 # as part of the reduction and a boolean that indicates whether the input instance was changed.
 
@@ -234,7 +240,7 @@ def mif_main(g: MultiGraph, f: set) -> int:
 	t = g.nodes[0]
 
 	gd_over_3 = None
-	gd_2 = None
+	gd_2 = Nonet = g.nodes[0]t = g.nodes[0]
 	for v in g.neighbors_iter(t):
 		(gd_v, gn_v) = generalized_degree(g, f, t, v)
 		if gd_v <= 1:
@@ -266,11 +272,24 @@ def mif_main(g: MultiGraph, f: set) -> int:
 		except:
 			gx_mif = mif_main(gx, fx2)
 		return max(mif_main(g, fx1), gx_mif)
-	print("Error - this shouldn't be possible")
+	print("Error - This shouldn't be possible")
 	return 0
 
 def mif_preprocess_2(g: MultiGraph, f: set) -> int:
-	if 
+	mif_size = 0
+	while not is_independent_set(g, f):
+		for component in nxc.connected_components(g):
+			if len(component) > 1:
+				compressed_node = component.pop()
+				g = compress(g, component, compressed_node)
+				f = f.intersect(g.nodes())
+				# Maybe faster with
+				# f = f.difference(component)
+				# f.add(compressed_node)
+				mif_size += len(component) - 1
+				break
+		print("Error - This shouldn't be possible")
+	return mif_main(g, f) + mif_size
 
 def mif_preprocess_1(g: MultiGraph, f: set) -> int:
 	if nxc.number_connected_components(g) >= 2:
