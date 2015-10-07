@@ -24,6 +24,7 @@ def time_all(graphs, alg) -> list:
 	with Pool(1) as p:
 		results = []
 		for (g, k) in graphs:
+			print('.', flush=True, end='')
 			promise = p.apply_async(func=time_instance, args=(g, k, alg))
 			try:
 				t = promise.get(TEN_MINUTES)
@@ -31,4 +32,5 @@ def time_all(graphs, alg) -> list:
 			except mp.TimeoutError:
 				results.append(None)
 
+		print("")
 		return results
