@@ -38,25 +38,21 @@ def generate_custom(k: int, q: int) -> MultiGraph:
 
 	# Connect the components without adding cycles.
 	g = MultiGraph(graphs[0])
-	# Index of the *first* node of the previous connected component.
-	index_prev = 0
-	# Index of the *first* node of the current connected component.
-	index_curr = len(graphs[0])
+	offset = len(graphs[0])
 	for c in graphs[1:]:
-		# Some node from the previous connected component.
-		prev_node = randint(index_prev, index_curr - 1)
+		# Last node from the previous connected component.
+		prev_node = randint(0, offset-1)
 
 		# Add the connected component. The offset ensures the vertices have new labels.
-		g.add_edges_from([(x + index_curr, y + index_curr) for (x, y) in c.edges()])
+		g.add_edges_from([(x + offset, y + offset) for (x, y) in c.edges()])
 
-		# Some node of the newly added connected component.
-		curr_node = randint(index_curr, index_curr + len(c))
+		# First node of the newly added connected component.
+		curr_node = randint(offset, offset + len(c))
 
 		# Add the connecting edge.
 		g.add_edge(prev_node, curr_node)
 
-		index_prev = index_curr
-		index_curr += len(c)
+		offset += len(c)
 
 	return g
 
