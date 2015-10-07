@@ -2,7 +2,7 @@ from fvs import *
 from generate import generate
 
 def test_cycle_graphs_ic():
-	meta_cycle_graphs(fvs_via_compression)
+	meta_cycle_graphs(fvs_via_ic)
 
 def test_cycle_graphs_mif():
 	meta_cycle_graphs(fvs_via_mif)
@@ -15,7 +15,7 @@ def meta_cycle_graphs(alg):
 		assert is_fvs(g, fvs)
 
 def test_complete_graphs_ic():
-	meta_complete_graphs(fvs_via_compression)
+	meta_complete_graphs(fvs_via_ic)
 
 def test_complete_graphs_mif():
 	meta_complete_graphs(fvs_via_mif)
@@ -30,7 +30,7 @@ def meta_complete_graphs(alg):
 		assert alg(g, i - 1) != None
 
 def test_example_ic():
-	meta_example(fvs_via_compression)
+	meta_example(fvs_via_ic)
 
 def test_example_mif():
 	meta_example(fvs_via_mif)
@@ -52,7 +52,7 @@ def meta_example(alg):
 	assert is_fvs(g, fvs)
 
 def test_generated_ic():
-	meta_generated(fvs_via_compression)
+	meta_generated(fvs_via_ic)
 
 def test_generated_mif():
 	meta_generated(fvs_via_mif)

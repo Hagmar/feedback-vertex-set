@@ -14,7 +14,7 @@ def main():
 	print("|E| = {}\n".format(len(g.edges())))
 
 	print("Algorithm: iterative compression with k = {}.".format(k))
-	fvs, time = time_instance((g, k), algorithm=fvs_via_compression, n=1)
+	fvs, time = time_instance((g, k), alg=fvs_via_ic, n=1)
 
 	print("\nDone!")
 	print("FVS = {} with size {}.".format(fvs, len(fvs)))

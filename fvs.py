@@ -67,6 +67,7 @@ def reduction3(g: MultiGraph, w: set, k: int) -> (int, int, bool):
 	return (k, None, False)
 
 # Exhaustively apply reductions.
+# This function owns G.
 def apply_reductions(g: MultiGraph, w: set, k: int) -> (int, set):
 	# Set of vertices included in the solution as a result of reductions.
 	x = set()
@@ -130,7 +131,7 @@ def fvs_disjoint(g: MultiGraph, w: set, k: int) -> set:
 
 # Given a graph G and an FVS Z of size (k + 1), construct an FVS of size at most k.
 # Return `None` if no such solution exists.
-def fvs_compression(g: MultiGraph, z: set, k: int) -> MultiGraph:
+def ic_compression(g: MultiGraph, z: set, k: int) -> MultiGraph:
 	assert (len(z) == k + 1)
 	# i in {0 .. k}
 	for i in range(0, k + 1):
@@ -141,8 +142,9 @@ def fvs_compression(g: MultiGraph, z: set, k: int) -> MultiGraph:
 				return x.union(xz)
 	return None
 
-# Given a graph G and an integer k, construct an FVS of size at most k.
-def fvs_via_compression(g: MultiGraph, k: int) -> set:
+# Given a graph G and an integer k, construct an FVS of size at most k using
+# the iterative compression based algorithm from Parametrzed Algorithms 4.3.1
+def fvs_via_ic(g: MultiGraph, k: int) -> set:
 	if len(g) <= k + 2:
 		return set(g.nodes()[:k])
 
@@ -166,7 +168,7 @@ def fvs_via_compression(g: MultiGraph, k: int) -> set:
 		assert (len(soln) == (k + 1))
 		assert (len(node_set) == (i + 1))
 
-		new_soln = fvs_compression(g.subgraph(node_set), soln, k)
+		new_soln = ic_compression(g.subgraph(node_set), soln, k)
 
 		if new_soln is None:
 			return None
