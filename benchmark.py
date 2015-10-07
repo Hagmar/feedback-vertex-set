@@ -14,8 +14,9 @@ def time_instance(gk: (MultiGraph, int), algorithm=fvs_via_compression, n=10) ->
 	end = time.process_time()
 	return (fvs, (end - start) / n)
 
-# Example benchmark.
-if __name__ == "__main__":
-	data = [(generate(i), i) for i in range(2, 8)]
+# Time a list of instances.
+# graphs: (MultiGraph, int)
+# returns: (fvs, time in seconds)
+def time_all(graphs) -> list:
 	with Pool(1) as p:
-		print(p.map(time_instance, data))
+		return p.map(time_instance, graphs)
