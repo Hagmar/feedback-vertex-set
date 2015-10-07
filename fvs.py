@@ -6,9 +6,21 @@ import networkx.algorithms.cycles as cyc
 from networkx import MultiGraph
 from networkx.algorithms.tree import is_forest
 
-def graph_minus(g: MultiGraph, w: set) -> MultiGraph:
+# Original (unused) code for G - W.
+def graph_minus_slow(g: MultiGraph, w: set) -> MultiGraph:
 	gx = g.copy()
 	gx.remove_nodes_from(w)
+	return gx
+
+# Optimised code for G - W (yields an approx 2x speed-up).
+def graph_minus(g: MultiGraph, w: set) -> MultiGraph:
+	gx = MultiGraph()
+	for (n1, n2) in g.edges():
+		if n1 not in w and n2 not in w:
+			gx.add_edge(n1, n2)
+	for n in g.nodes():
+		if n not in w:
+			gx.add_node(n)
 	return gx
 
 def is_fvs(g: MultiGraph, w) -> bool:
@@ -21,17 +33,15 @@ def is_independent_set(g: MultiGraph, f: set) -> bool:
 			return False
 	return True
 
-# Note: All reduction functions return (G, W, k) followed by any element added to the solution
-# as part of the reduction and a boolean that indicates whether the input instance was changed.
-
-# Reduction functions return (k, new, changed) and mutate their arguments!
+# Note: Reduction functions return (k, new, changed) and mutate their graph arguments (G and H)!
 
 # Delete all vertices of degree 0 or 1 (as they can't be part of any cycles).
-def reduction1(g: MultiGraph, w: set, k: int) -> (int, int, bool):
+def reduction1(g: MultiGraph, w: set, h: MultiGraph, k: int) -> (int, int, bool):
 	changed = False
 	for v in g.nodes():
 		if g.degree(v) <= 1:
 			g.remove_node(v)
+			h.remove_nodes_from([v])
 			changed = True
 	return (k, None, changed)
 
@@ -40,12 +50,12 @@ def reduction1(g: MultiGraph, w: set, k: int) -> (int, int, bool):
 # parameter by 1. That is, the new instance is (G - {v}, W, k - 1).
 # If v introduces a cycle, it must be part of X as none of the vertices in W
 # will be available to neutralise this cycle.
-def reduction2(g: MultiGraph, w: set, k: int) -> (int, int, bool):
-	h = graph_minus(g, w)
+def reduction2(g: MultiGraph, w: set, h: MultiGraph, k: int) -> (int, int, bool):
 	for v in h.nodes():
 		# Check if G[W ∪ {v}] contains a cycle.
 		if not is_forest(g.subgraph(w.union({v}))):
 			g.remove_node(v)
+			h.remove_nodes_from([v])
 			return (k - 1, v, True)
 	return (k, None, False)
 
@@ -53,8 +63,7 @@ def reduction2(g: MultiGraph, w: set, k: int) -> (int, int, bool):
 # that at least one neighbor of v in G is from V (H), then delete this vertex
 # and make its neighbors adjacent (even if they were adjacent before; the graph
 # could become a multigraph now).
-def reduction3(g: MultiGraph, w: set, k: int) -> (int, int, bool):
-	h = graph_minus(g, w)
+def reduction3(g: MultiGraph, w: set, h: MultiGraph, k: int) -> (int, int, bool):
 	for v in h.nodes():
 		if g.degree(v) == 2:
 			# If v has a neighbour in H, short-curcuit it.
@@ -63,18 +72,25 @@ def reduction3(g: MultiGraph, w: set, k: int) -> (int, int, bool):
 				[n1, n2] = g.neighbors(v)
 				g.remove_node(v)
 				g.add_edge(n1, n2)
+				# Update H accordingly.
+				h.remove_nodes_from([v])
+				if n1 not in w and n2 not in w:
+					h.add_edge(n1, n2)
 				return (k, None, True)
 	return (k, None, False)
 
 # Exhaustively apply reductions.
 # This function owns G.
 def apply_reductions(g: MultiGraph, w: set, k: int) -> (int, set):
+	# Current H.
+	h = graph_minus(g, w)
+
 	# Set of vertices included in the solution as a result of reductions.
 	x = set()
 	while True:
 		reduction_applied = False
 		for f in [reduction1, reduction2, reduction3]:
-			(k, solx, changed) = f(g, w, k)
+			(k, solx, changed) = f(g, w, h, k)
 
 			if changed:
 				reduction_applied = True
@@ -113,18 +129,18 @@ def fvs_disjoint(g: MultiGraph, w: set, k: int) -> set:
 		if h.degree(v) <= 1:
 			x = v
 			break
-	assert x != None
+	assert x is not None
 
 	# Branch.
 	# G is copied in the left branch (as it is modified), but passed directly in the right.
 	soln_left = fvs_disjoint(graph_minus(g, {x}), w, k - 1)
 
-	if soln_left != None:
+	if soln_left is not None:
 		return soln_redux.union(soln_left).union({x})
 
 	soln_right = fvs_disjoint(g, w.union({x}), k)
 
-	if soln_right != None:
+	if soln_right is not None:
 		return soln_redux.union(soln_right)
 
 	return None
@@ -136,9 +152,8 @@ def ic_compression(g: MultiGraph, z: set, k: int) -> MultiGraph:
 	# i in {0 .. k}
 	for i in range(0, k + 1):
 		for xz in itertools.combinations(z, i):
-			xz = set(xz)
 			x = fvs_disjoint(graph_minus(g, xz), z.difference(xz), k - i)
-			if x != None:
+			if x is not None:
 				return x.union(xz)
 	return None
 
@@ -154,7 +169,7 @@ def fvs_via_ic(g: MultiGraph, k: int) -> set:
 	# The set of nodes currently under consideration.
 	node_set = set(nodes[:(k + 2)])
 
-	# The current best solution, of size <= (k + 1) at the start of each iteration,
+	# The current best solution, of size (k + 1) before each compression step,
 	# and size <= k at the end.
 	soln = set(nodes[:k])
 
