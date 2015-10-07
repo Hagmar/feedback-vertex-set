@@ -21,7 +21,7 @@ def time_instance(g: MultiGraph, k: int, alg, n=1) -> (set, float):
 # graphs: [(MultiGraph, int)]
 # returns: [(fvs, time in seconds)]
 def time_all(graphs, alg) -> list:
-	with Pool(8) as p:
+	with Pool(1) as p:
 		results = []
 		for (g, k) in graphs:
 			promise = p.apply_async(func=time_instance, args=(g, k, alg))

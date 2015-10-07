@@ -56,15 +56,15 @@ def generate_custom(k: int, q: int) -> MultiGraph:
 
 	return g
 
-# Load a collection of graphs from disk.
-def load_graphs(filename) -> list:
+# Load pickled data from disk.
+def from_disk(filename) -> list:
 	with open(filename, "rb") as f:
 		return pickle.load(f)
 
-# Dump a collection of graphs to disk.
-def dump_graphs(graphs, filename):
+# Pickle data to disk.
+def to_disk(data, filename):
 	with open(filename, "wb") as f:
-		pickle.dump(instances, f)
+		pickle.dump(data, f)
 
 # Generate a bunch of graphs.
 def generate_collection(k_min, k_max, q, graphs_per_k):
