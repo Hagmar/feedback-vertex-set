@@ -26,13 +26,19 @@ def is_independent_set(g: MultiGraph, f: set) -> bool:
 
 # Delete all vertices of degree 0 or 1 (as they can't be part of any cycles).
 def reduction1(g: MultiGraph, w: set, k: int) -> (MultiGraph, set, int, int, bool):
-	gx = g.copy()
-	changed = False
-	for v in gx.nodes():
-		if gx.degree(v) <= 1:
+	# Copy-on-demand result graph.
+	gx = None
+	for v in g.nodes():
+		if g.degree(v) <= 1:
+			# Create gx if necessary.
+			if gx is None:
+				gx = g.copy()
 			gx.remove_node(v)
-			changed = True
-	return (gx, w, k, None, changed)
+
+	if gx is None:
+		return (g, w, k, None, False)
+	else:
+		return (gx, w, k, None, True)
 
 # If there exists a vertex v in H such that G[W ∪ {v}]
 # contains a cycle, then include v in the solution, delete v and decrease the
@@ -42,10 +48,8 @@ def reduction1(g: MultiGraph, w: set, k: int) -> (MultiGraph, set, int, int, boo
 def reduction2(g: MultiGraph, w: set, k: int) -> (MultiGraph, set, int, int, bool):
 	h = graph_minus(g, w)
 	for v in h.nodes():
-		wv = w.copy()
-		wv.add(v)
 		# Check if G[W ∪ {v}] contains a cycle.
-		if not is_forest(g.subgraph(wv)):
+		if not is_forest(g.subgraph(w.union({v}))):
 			gx = g.copy()
 			gx.remove_node(v)
 			return (gx, w, k - 1, v, True)
