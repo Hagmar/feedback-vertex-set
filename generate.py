@@ -56,20 +56,16 @@ def generate_custom(k: int, q: int) -> MultiGraph:
 
 	return g
 
+# Load a collection of graphs from disk.
 def load_graphs(filename) -> list:
 	with open(filename, "rb") as f:
 		return pickle.load(f)
 
-K_MIN = 2
-K_MAX = 8
-GRAPHS_PER_K = 20
-OUTPUT_FILE = "graphs.pickle"
-
-# Generate a bunch of graphs and write them to disk.
-def generate_lots():
-	instances = [(generate(k), k) for k in range(K_MIN, K_MAX) for _ in range(GRAPHS_PER_K)]
-	with open(OUTPUT_FILE, "wb") as f:
+# Dump a collection of graphs to disk.
+def dump_graphs(graphs, filename):
+	with open(filename, "wb") as f:
 		pickle.dump(instances, f)
 
-if __name__ == "__main__":
-	generate_lots()
+# Generate a bunch of graphs.
+def generate_collection(k_min, k_max, q, graphs_per_k):
+	return [(generate_custom(k, q), k) for k in range(k_min, k_max) for _ in range(graphs_per_k)]
