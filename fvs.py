@@ -254,8 +254,7 @@ def mif_main(g: MultiGraph, f: set, t, k: int) -> set:
 			elif not mif_set2:
 				return mif_set1
 			else:
-				a= max(mif_set1, mif_set2, key=len)
-				return a
+				return max(mif_set1, mif_set2, key=len)
 
 	# Set t as active vertex
 	if t == None or not t in f:
@@ -361,7 +360,11 @@ def mif_preprocess_1(g: MultiGraph, f: set, active_v, k: int) -> set:
 	return mif_preprocess_2(g, f, active_v, k)
 
 def mif(g: MultiGraph, k=None) -> set:
-	return mif_preprocess_1(g, set(), None, k)
+	mif_set = mif_preprocess_1(g, set(), None, k)
+	if k != None and mif_set:
+		if len(mif_set) < k:
+			mif_set = None
+	return mif_set
 
 def fvs_via_mif(g: MultiGraph, k: int) -> set:
 	mif_set = mif(g, g.order()-k)
