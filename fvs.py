@@ -67,15 +67,13 @@ def reduction3(g: MultiGraph, w: set, k: int) -> (int, int, bool):
 	return (k, None, False)
 
 # Exhaustively apply reductions.
-def apply_reductions(g: MultiGraph, w: set, k: int) -> (MultiGraph, int, set):
-	# One initial copy of the graph.
-	gx = g.copy()
+def apply_reductions(g: MultiGraph, w: set, k: int) -> (int, set):
 	# Set of vertices included in the solution as a result of reductions.
 	x = set()
 	while True:
 		reduction_applied = False
 		for f in [reduction1, reduction2, reduction3]:
-			(k, solx, changed) = f(gx, w, k)
+			(k, solx, changed) = f(g, w, k)
 
 			if changed:
 				reduction_applied = True
@@ -83,7 +81,7 @@ def apply_reductions(g: MultiGraph, w: set, k: int) -> (MultiGraph, int, set):
 					x.add(solx)
 
 		if not reduction_applied:
-			return (gx, k, x)
+			return (k, x)
 
 # Given a graph G and a FVS W of size at least (k + 1), is it possible to construct
 # a FVS X of size at most k using only the vertices of G - W?
@@ -95,7 +93,7 @@ def fvs_disjoint(g: MultiGraph, w: set, k: int) -> set:
 		return None
 
 	# Apply reductions exhaustively.
-	g, k, soln_redux = apply_reductions(g, w, k)
+	k, soln_redux = apply_reductions(g, w, k)
 
 	# If k becomes negative, it indicates that the reductions included
 	# more than k vertices, hence no solution of size <= k exists.
