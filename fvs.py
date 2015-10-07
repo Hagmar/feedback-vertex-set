@@ -24,66 +24,58 @@ def is_independent_set(g: MultiGraph, f: set) -> bool:
 # Note: All reduction functions return (G, W, k) followed by any element added to the solution
 # as part of the reduction and a boolean that indicates whether the input instance was changed.
 
+# Reduction functions return (k, new, changed) and mutate their arguments!
+
 # Delete all vertices of degree 0 or 1 (as they can't be part of any cycles).
-def reduction1(g: MultiGraph, w: set, k: int) -> (MultiGraph, set, int, int, bool):
-	# Copy-on-demand result graph.
-	gx = None
+def reduction1(g: MultiGraph, w: set, k: int) -> (int, int, bool):
+	changed = False
 	for v in g.nodes():
 		if g.degree(v) <= 1:
-			# Create gx if necessary.
-			if gx is None:
-				gx = g.copy()
-			gx.remove_node(v)
-
-	if gx is None:
-		return (g, w, k, None, False)
-	else:
-		return (gx, w, k, None, True)
+			g.remove_node(v)
+			changed = True
+	return (k, None, changed)
 
 # If there exists a vertex v in H such that G[W ∪ {v}]
 # contains a cycle, then include v in the solution, delete v and decrease the
 # parameter by 1. That is, the new instance is (G - {v}, W, k - 1).
 # If v introduces a cycle, it must be part of X as none of the vertices in W
 # will be available to neutralise this cycle.
-def reduction2(g: MultiGraph, w: set, k: int) -> (MultiGraph, set, int, int, bool):
+def reduction2(g: MultiGraph, w: set, k: int) -> (int, int, bool):
 	h = graph_minus(g, w)
 	for v in h.nodes():
 		# Check if G[W ∪ {v}] contains a cycle.
 		if not is_forest(g.subgraph(w.union({v}))):
-			gx = g.copy()
-			gx.remove_node(v)
-			return (gx, w, k - 1, v, True)
-	return (g, w, k, None, False)
+			g.remove_node(v)
+			return (k - 1, v, True)
+	return (k, None, False)
 
 # If there is a vertex v ∈ V (H) of degree 2 in G such
 # that at least one neighbor of v in G is from V (H), then delete this vertex
 # and make its neighbors adjacent (even if they were adjacent before; the graph
 # could become a multigraph now).
-def reduction3(g: MultiGraph, w: set, k: int) -> (MultiGraph, set, int, int, bool):
+def reduction3(g: MultiGraph, w: set, k: int) -> (int, int, bool):
 	h = graph_minus(g, w)
 	for v in h.nodes():
 		if g.degree(v) == 2:
 			# If v has a neighbour in H, short-curcuit it.
 			if len(h[v]) >= 1:
 				# Delete v and make its neighbors adjacent.
-				gx = g.copy()
 				[n1, n2] = g.neighbors(v)
-				gx.remove_node(v)
-				gx.add_edge(n1, n2)
-				return (gx, w, k, None, True)
-	return (g, w, k, None, False)
+				g.remove_node(v)
+				g.add_edge(n1, n2)
+				return (k, None, True)
+	return (k, None, False)
 
 # Exhaustively apply reductions.
-def apply_reductions(g: MultiGraph, w: set, k: int) -> (MultiGraph, set, int, set):
-	gx = g
-	wx = w
-	kx = k
+def apply_reductions(g: MultiGraph, w: set, k: int) -> (MultiGraph, int, set):
+	# One initial copy of the graph.
+	gx = g.copy()
 	# Set of vertices included in the solution as a result of reductions.
 	x = set()
 	while True:
 		reduction_applied = False
 		for f in [reduction1, reduction2, reduction3]:
-			(gx, wx, kx, solx, changed) = f(gx, wx, kx)
+			(k, solx, changed) = f(gx, w, k)
 
 			if changed:
 				reduction_applied = True
@@ -91,10 +83,11 @@ def apply_reductions(g: MultiGraph, w: set, k: int) -> (MultiGraph, set, int, se
 					x.add(solx)
 
 		if not reduction_applied:
-			return (gx, wx, kx, x)
+			return (gx, k, x)
 
 # Given a graph G and a FVS W of size at least (k + 1), is it possible to construct
 # a FVS X of size at most k using only the vertices of G - W?
+# This function owns G and can mutate it freely.
 def fvs_disjoint(g: MultiGraph, w: set, k: int) -> set:
 	# Check that G[W] is a forest.
 	# If it isn't, then a solution X not using W can't remove W's cycles.
@@ -102,7 +95,7 @@ def fvs_disjoint(g: MultiGraph, w: set, k: int) -> set:
 		return None
 
 	# Apply reductions exhaustively.
-	g, w, k, soln_redux = apply_reductions(g, w, k)
+	g, k, soln_redux = apply_reductions(g, w, k)
 
 	# If k becomes negative, it indicates that the reductions included
 	# more than k vertices, hence no solution of size <= k exists.
