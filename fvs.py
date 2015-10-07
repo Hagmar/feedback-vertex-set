@@ -93,7 +93,7 @@ def apply_reductions(g: MultiGraph, w: set, k: int) -> (MultiGraph, set, int, se
 		if not reduction_applied:
 			return (gx, wx, kx, x)
 
-# Given a graph G and a FVS W of size (k + 1), is it possible to construct
+# Given a graph G and a FVS W of size at least (k + 1), is it possible to construct
 # a FVS X of size at most k using only the vertices of G - W?
 def fvs_disjoint(g: MultiGraph, w: set, k: int) -> set:
 	# Check that G[W] is a forest.
@@ -125,12 +125,12 @@ def fvs_disjoint(g: MultiGraph, w: set, k: int) -> set:
 
 	# Branch.
 	# G is copied in the left branch (as it is modified), but passed directly in the right.
-	soln_left = fvs_compression(graph_minus(g, {x}), w, k - 1)
+	soln_left = fvs_disjoint(graph_minus(g, {x}), w, k - 1)
 
 	if soln_left != None:
-		return soln_redux.union(soln_left)
+		return soln_redux.union(soln_left).union({x})
 
-	soln_right = fvs_compression(g, w.union({x}), k)
+	soln_right = fvs_disjoint(g, w.union({x}), k)
 
 	if soln_right != None:
 		return soln_redux.union(soln_right)
@@ -140,6 +140,7 @@ def fvs_disjoint(g: MultiGraph, w: set, k: int) -> set:
 # Given a graph G and an FVS Z of size (k + 1), construct an FVS of size at most k.
 # Return `None` if no such solution exists.
 def fvs_compression(g: MultiGraph, z: set, k: int) -> MultiGraph:
+	assert (len(z) == k + 1)
 	# i in {0 .. k}
 	for i in range(0, k + 1):
 		for xz in itertools.combinations(z, i):
@@ -168,12 +169,15 @@ def fvs_via_compression(g: MultiGraph, k: int) -> set:
 		soln.add(nodes[i])
 		node_set.add(nodes[i])
 
-		assert (len(soln) <= (k + 1))
+		if len(soln) < k + 1:
+			continue
+
+		assert (len(soln) == (k + 1))
 		assert (len(node_set) == (i + 1))
 
-		new_soln = fvs_compression(g.subgraph(node_set).copy(), soln, k)
+		new_soln = fvs_compression(g.subgraph(node_set), soln, k)
 
-		if new_soln == None:
+		if new_soln is None:
 			return None
 
 		soln = new_soln
