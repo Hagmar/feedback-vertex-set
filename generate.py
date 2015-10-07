@@ -41,13 +41,13 @@ def generate_custom(k: int, q: int) -> MultiGraph:
 	offset = len(graphs[0])
 	for c in graphs[1:]:
 		# Last node from the previous connected component.
-		prev_node = randint(0, offset-1)
+		prev_node = randint(0, offset - 1)
 
 		# Add the connected component. The offset ensures the vertices have new labels.
 		g.add_edges_from([(x + offset, y + offset) for (x, y) in c.edges()])
 
 		# First node of the newly added connected component.
-		curr_node = randint(offset, offset + len(c))
+		curr_node = randint(offset, offset + len(c) - 1)
 
 		# Add the connecting edge.
 		g.add_edge(prev_node, curr_node)
