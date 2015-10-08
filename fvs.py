@@ -193,10 +193,13 @@ def fvs_via_ic(g: MultiGraph, k: int) -> set:
 
 	return soln
 
-def compress(g: MultiGraph, t: set, compressed_node) -> MultiGraph:
-	gx = g.copy()
+def compress(g: MultiGraph, t: set, compressed_node, mutate=False) -> MultiGraph:
 	if not t:
-		return gx
+		return g
+	if mutate:
+		gx = g
+	else:
+		gx = g.copy()
 
 	tx = t
 	if compressed_node in tx:
@@ -339,7 +342,7 @@ def mif_preprocess_2(g: MultiGraph, f: set, active_v, k: int) -> set:
 					compressed_node = active_v
 				else:
 					compressed_node = component.pop()
-				g = compress(g, component, compressed_node)
+				g = compress(g, component, compressed_node, True)
 				f = f.intersection(g.nodes())
 				# Maybe faster with
 				# f = f.difference(component)
