@@ -14,11 +14,12 @@ def main():
 		("small", "data/01_small_n.graphs"),
 		("medium", "data/02_medium_n.graphs"),
 		("large", "data/03_large_n.graphs"),
-		("k12_large", "data/04_k12_large.graphs")
+		("k12_large", "data/04_k12_large.graphs"),
+		("no_instances", "data/05_no_instances.graphs")
 	]
 
 	# Set of tests to run.
-	run = {"tiny", "k12_large"}
+	run = {"tiny", "no_instances"}
 
 	for (name, filename) in data_sets:
 		if name not in run:

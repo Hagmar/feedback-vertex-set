@@ -1,0 +1,7 @@
+Dataset descriptions:
+
+* small: k = 1-16, q = 16, ~80 nodes each, 5 for each k (80 total).
+* medium: k = 1-16, q = 50, ~200 nodes each, 5 for each k (80 total).
+* large: k=1-16, q=200, ~400 nodes each, 5 for each k (80 total, unused).
+* k12_large: k=12, q=50?, 10 total.
+* no_instances: Subset of small instances with k set to k - 1. k=2-8, 35 total.
