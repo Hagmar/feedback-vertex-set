@@ -37,7 +37,7 @@ def plot_time_vs_k(data, annotate=set()):
 	plt.ylabel("Running time [s]")
 
 	# Annotate some k values with their n values.
-	for i, n in enumerate(n_values):
+	for i, n in enumerate(n_data):
 		if x_data[i] not in annotate:
 			continue
 		ax.annotate(n, (x_data[i], y_data[i]))
